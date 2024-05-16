@@ -15,7 +15,7 @@ function App() {
         element: <Order />,
       },
     ],
-    { basename: "/react-shopping-cart" }
+    { basename: process.env.BASE_URL }
   );
   return (
     <>
