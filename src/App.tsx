@@ -15,7 +15,7 @@ function App() {
         element: <Order />,
       },
     ],
-    { basename: "/" }
+    { basename: "/react-shopping-cart" }
   );
   return (
     <>
