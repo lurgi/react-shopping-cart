@@ -15,8 +15,9 @@ function App() {
         element: <Order />,
       },
     ],
-    { basename: process.env.BASE_URL }
+    { basename: import.meta.env.BASE_URL }
   );
+
   return (
     <>
       <React.StrictMode>
