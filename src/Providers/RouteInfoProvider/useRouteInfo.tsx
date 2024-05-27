@@ -1,15 +1,13 @@
-import { PropsWithChildren, createContext } from "react";
-import { useRecoilValue } from "recoil";
-import { To } from "react-router-dom";
-
-import { orderAmountState } from "@/store/selector/selectors";
-
+import { placeOrders } from "@/api";
 import Cart from "@/routes/Cart";
 import CheckOrder from "@/routes/CheckOrder";
 import Order from "@/routes/Order";
-import { RiArrowLeftLine } from "react-icons/ri";
-
+import { cartState } from "@/store/atom/atoms";
+import { orderAmountState } from "@/store/selector/selectors";
 import { ModalProvider } from "easy-payments-ui";
+import { RiArrowLeftLine } from "react-icons/ri";
+import { To } from "react-router-dom";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 
 export const routes = [
   {
@@ -34,26 +32,24 @@ const paths = routes.map((route) => route.path);
 export type RoutePaths = (typeof paths)[number];
 export type RoutesObject<T> = Record<RoutePaths, T>;
 
-interface HeaderInfo {
+export interface HeaderInfo {
   leftButtonContent: React.ReactNode;
   linkTo: To | number;
 }
 
-interface MainInfo {
+export interface MainInfo {
   cartDescription?: string;
 }
 
-interface FooterInfo {
+export interface FooterInfo {
   content: string;
   isButtonDisabled: boolean;
   linkTo: To | number;
+  handleClick?: () => void;
 }
 
-export const HeaderRouteInfoContext = createContext<null | RoutesObject<HeaderInfo>>(null);
-export const MainRouteInfoContext = createContext<null | RoutesObject<MainInfo>>(null);
-export const FooterRouteInfoContext = createContext<null | RoutesObject<FooterInfo>>(null);
-
-const RouteInfoProvider = ({ children }: PropsWithChildren) => {
+function useRouteInfo() {
+  const setCartItems = useSetRecoilState(cartState);
   const orderAmount = useRecoilValue(orderAmountState);
 
   const headerInfo: RoutesObject<HeaderInfo> = {
@@ -79,7 +75,7 @@ const RouteInfoProvider = ({ children }: PropsWithChildren) => {
     "/order": {},
   };
 
-  const footerInfo: RoutesObject<FooterInfo> = {
+  const footerInfo = {
     "/": {
       content: "주문 확인",
       isButtonDisabled: orderAmount === 0,
@@ -89,21 +85,19 @@ const RouteInfoProvider = ({ children }: PropsWithChildren) => {
       content: "결제하기",
       isButtonDisabled: orderAmount === 0,
       linkTo: "/order",
+      handleClick: () => {
+        placeOrders();
+        setCartItems([]);
+      },
     },
     "/order": {
       content: "결제하기",
-      isButtonDisabled: true,
-      linkTo: 0,
+      isButtonDisabled: false,
+      linkTo: "/",
     },
   };
 
-  return (
-    <HeaderRouteInfoContext.Provider value={headerInfo}>
-      <FooterRouteInfoContext.Provider value={footerInfo}>
-        <MainRouteInfoContext.Provider value={mainInfo}>{children}</MainRouteInfoContext.Provider>
-      </FooterRouteInfoContext.Provider>
-    </HeaderRouteInfoContext.Provider>
-  );
-};
+  return { headerInfo, mainInfo, footerInfo };
+}
 
-export default RouteInfoProvider;
+export default useRouteInfo;
